@@ -8,12 +8,9 @@ import com.ubertob.kondor.json.obj
 import com.ubertob.kondor.json.str
 import org.http4k.contract.ContractRendererContract
 import org.http4k.contract.contract
-import org.http4k.contract.jsonschema.JsonSchema
-import org.http4k.contract.jsonschema.v3.KondorJsonSchemaCreator
 import org.http4k.contract.meta
 import org.http4k.contract.openapi.AddSimpleFieldToRootNode
 import org.http4k.contract.openapi.ApiInfo
-import org.http4k.contract.openapi.ApiRenderer
 import org.http4k.core.HttpMessage
 import org.http4k.core.Method
 import org.http4k.core.Request
@@ -58,7 +55,7 @@ class OpenApi3KondorTest : ContractRendererContract<JsonNode>(
     OpenApi3(
         apiInfo = ApiInfo("title", "1.2", "module description"),
         json = kondor,
-        apiRenderer = KondorOpenApi3Renderer(kondor, OpenApi3ApiRenderer(kondor)),
+        apiRenderer = KondorOpenApi3Renderer(kondor),
         servers = listOf(ApiServer(Uri.of("http://localhost:8000"))),
         extensions = listOf(AddSimpleFieldToRootNode),
     )
@@ -112,22 +109,5 @@ class OpenApi3KondorTest : ContractRendererContract<JsonNode>(
         }
 
         approver.assertApproved(router(Request(Method.GET, "/basepath?the_api_key=somevalue")))
-    }
-
-    // this serves as an example of how the KondorJsonToJsonSchema can be used to render the OpenApi3 contract
-    private class KondorOpenApi3Renderer(
-        kondorJson: KondorJson,
-        private val delegate: OpenApi3ApiRenderer<JsonNode>,
-        refLocationPrefix: String = "components/schemas",
-    ) : ApiRenderer<Api<JsonNode>, JsonNode> by delegate {
-        private val jsonToJsonSchema = KondorJsonSchemaCreator(kondorJson, refLocationPrefix)
-
-        override fun toSchema(
-            obj: Any,
-            overrideDefinitionId: String?,
-            refModelNamePrefix: String?,
-        ): JsonSchema<JsonNode> {
-            return jsonToJsonSchema.toSchema(obj, overrideDefinitionId, refModelNamePrefix)
-        }
     }
 }
